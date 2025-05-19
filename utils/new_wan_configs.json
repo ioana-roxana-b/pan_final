@@ -1,0 +1,98 @@
+{
+  "C1": {
+    "punctuations": "True",
+    "stopwords": "True",
+    "lemmatizer": "True",
+    "include_pos": "True"
+  },
+  "C2": {
+    "punctuations": "True",
+    "stopwords": "True",
+    "lemmatizer": "False",
+    "include_pos": "True"
+  },
+  "C3": {
+    "punctuations": "True",
+    "stopwords": "False",
+    "lemmatizer": "False",
+    "include_pos": "True"
+  },
+  "C4": {
+    "punctuations": "True",
+    "stopwords": "False",
+    "lemmatizer": "True",
+    "include_pos": "True"
+  },
+  "C5": {
+    "punctuations": "False",
+    "stopwords": "True",
+    "lemmatizer": "True",
+    "include_pos": "True"
+  },
+  "C6": {
+    "punctuations": "False",
+    "stopwords": "True",
+    "lemmatizer": "False",
+    "include_pos": "True"
+  },
+  "C7": {
+    "punctuations": "False",
+    "stopwords": "False",
+    "lemmatizer": "False",
+    "include_pos": "True"
+  },
+  "C8": {
+    "punctuations": "False",
+    "stopwords": "False",
+    "lemmatizer": "True",
+    "include_pos": "True"
+  },
+  "C9": {
+    "punctuations": "True",
+    "stopwords": "True",
+    "lemmatizer": "True",
+    "include_pos": "False"
+  },
+  "C10": {
+    "punctuations": "True",
+    "stopwords": "True",
+    "lemmatizer": "False",
+    "include_pos": "False"
+  },
+  "C11": {
+    "punctuations": "True",
+    "stopwords": "False",
+    "lemmatizer": "False",
+    "include_pos": "False"
+  },
+  "C12": {
+    "punctuations": "True",
+    "stopwords": "False",
+    "lemmatizer": "True",
+    "include_pos": "False"
+  },
+  "C13": {
+    "punctuations": "False",
+    "stopwords": "True",
+    "lemmatizer": "True",
+    "include_pos": "False"
+  },
+  "C14": {
+    "punctuations": "False",
+    "stopwords": "True",
+    "lemmatizer": "False",
+    "include_pos": "False"
+  },
+  "C15": {
+    "punctuations": "False",
+    "stopwords": "False",
+    "lemmatizer": "False",
+    "include_pos": "False"
+  },
+  "C16": {
+    "punctuations": "False",
+    "stopwords": "False",
+    "lemmatizer": "True",
+    "include_pos": "False"
+  }
+}

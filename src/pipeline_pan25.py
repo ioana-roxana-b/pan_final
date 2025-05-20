@@ -148,13 +148,33 @@ def collect_problem_ids(directory):
 
 
 def load_wan_config(config_name):
-    with open("utils/new_wan_configs.json", 'r') as f:
-        all_configs = json.load(f)
+    all_configs = {
+        "C1": {"punctuations": "True", "stopwords": "True", "lemmatizer": "True", "include_pos": "True"},
+        "C2": {"punctuations": "True", "stopwords": "True", "lemmatizer": "False", "include_pos": "True"},
+        "C3": {"punctuations": "True", "stopwords": "False", "lemmatizer": "False", "include_pos": "True"},
+        "C4": {"punctuations": "True", "stopwords": "False", "lemmatizer": "True", "include_pos": "True"},
+        "C5": {"punctuations": "False", "stopwords": "True", "lemmatizer": "True", "include_pos": "True"},
+        "C6": {"punctuations": "False", "stopwords": "True", "lemmatizer": "False", "include_pos": "True"},
+        "C7": {"punctuations": "False", "stopwords": "False", "lemmatizer": "False", "include_pos": "True"},
+        "C8": {"punctuations": "False", "stopwords": "False", "lemmatizer": "True", "include_pos": "True"},
+        "C9": {"punctuations": "True", "stopwords": "True", "lemmatizer": "True", "include_pos": "False"},
+        "C10": {"punctuations": "True", "stopwords": "True", "lemmatizer": "False", "include_pos": "False"},
+        "C11": {"punctuations": "True", "stopwords": "False", "lemmatizer": "False", "include_pos": "False"},
+        "C12": {"punctuations": "True", "stopwords": "False", "lemmatizer": "True", "include_pos": "False"},
+        "C13": {"punctuations": "False", "stopwords": "True", "lemmatizer": "True", "include_pos": "False"},
+        "C14": {"punctuations": "False", "stopwords": "True", "lemmatizer": "False", "include_pos": "False"},
+        "C15": {"punctuations": "False", "stopwords": "False", "lemmatizer": "False", "include_pos": "False"},
+        "C16": {"punctuations": "False", "stopwords": "False", "lemmatizer": "True", "include_pos": "False"},
+    }
+
     config = all_configs.get(config_name, {})
-    if not isinstance(config, dict):
+    if not isinstance(config, dict) or not config:
         raise ValueError(f"Invalid WAN config: {config_name}")
+
+    # Convert strings to booleans
     for key in ["punctuations", "stopwords", "lemmatizer", "include_pos"]:
         config[key] = str(config.get(key, "False")).lower() == "true"
+
     config['name'] = config_name
     return config
 
@@ -353,10 +373,10 @@ def pipeline_pan(test_dir, output_test_dir, wan_config):
     config = load_wan_config(wan_config)
     test_ids, actual_data_dir = collect_problem_ids(test_dir)
 
-    print(f"[DEBUG] Looking in: {test_dir}")
-    print("Files in dir:", os.listdir(test_dir))
-
-    print(f"[DEBUG] Found problem files: {test_ids}")
+    # print(f"[DEBUG] Looking in: {test_dir}")
+    # print("Files in dir:", os.listdir(test_dir))
+    #
+    # print(f"[DEBUG] Found problem files: {test_ids}")
 
     global sbert_model
     device = select_device()

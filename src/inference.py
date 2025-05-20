@@ -6,6 +6,7 @@ import joblib
 from sklearn.preprocessing import MinMaxScaler
 
 def run_inference(test_df, output_dir, model, problem_type):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Step 1: Clean up features
     X_test = test_df.drop(columns=["problem_id", "sentence_index", "label"], errors='ignore')
@@ -20,9 +21,9 @@ def run_inference(test_df, output_dir, model, problem_type):
     if problem_type in ["easy", "medium"]:
         print(f"[INFO] Loading MinMaxScaler for problem type: {problem_type}")
         if problem_type == "easy":
-            scaler_path = f"models/minmax_scaler_C3_easy.pkl"
+            scaler_path = os.path.join(base_dir, "models", "minmax_scaler_C3_easy.pkl")
         else:
-            scaler_path = f"models/minmax_scaler_C14_medium.pkl"
+            scaler_path = os.path.join(base_dir, "models", "minmax_scaler_C14_medium.pkl")
 
         if not os.path.exists(scaler_path):
             raise FileNotFoundError(f"Scaler file not found at: {scaler_path}")

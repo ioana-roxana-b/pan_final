@@ -1,50 +1,6 @@
 import os
 import joblib
-import pandas as pd
-
 from src import inference, pipeline_pan25
-import os
-os.environ["NLTK_DATA"] = "/usr/local/nltk_data"
-
-
-
-def load_features(directory, wan_config):
-    """
-    Loads and concatenates all CSV feature files from the specified directory.
-
-    - Validates that the directory exists and contains `.csv` files
-    - Ensures that training data includes a 'label' column
-    - Merges all CSVs into a single DataFrame
-
-    Params:
-        directory (str): Path to the directory containing the CSV feature files.
-
-    Returns:
-        pd.DataFrame: A concatenated DataFrame of all features in the directory.
-    """
-    path = f'{directory}'
-
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Feature directory '{path}' not found.")
-
-    csv_files = [f for f in os.listdir(path) if f.endswith('.csv')]
-
-    if not csv_files:
-        raise ValueError(f"No CSV files found in directory '{path}'.")
-
-    # Load all CSVs and concatenate
-    dataframes = []
-    for f in csv_files:
-        file_path = os.path.join(path, f)
-        df = pd.read_csv(file_path)
-
-        # Ensure 'label' column exists for training data
-        if 'label' not in df.columns and 'train' in path.lower():
-            raise ValueError(f"Missing 'label' column in {file_path}")
-
-        dataframes.append(df)
-
-    return pd.concat(dataframes, ignore_index=True)
 
 def detect_problem_type(input_dir):
     parts = os.path.normpath(input_dir).split(os.sep)
@@ -56,6 +12,9 @@ def detect_problem_type(input_dir):
 def test(args):
     print("\n==== STARTING TEST PIPELINE ====\n")
     base_input_dir = args.input
+    base_output_dir = args.output
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
     problem_types = ["easy", "medium", "hard"]
 
     for problem_type in problem_types:
@@ -68,13 +27,13 @@ def test(args):
         print(f"\n--- Processing problem type: {problem_type} ---")
 
         if problem_type == "easy":
-            model_path = "models/grad_boost_C3_easy.pkl"
+            model_path = os.path.join(base_dir, "models", "grad_boost_C3_easy.pkl")
             wan_config = "C3"
         elif problem_type == "medium":
-            model_path = "models/grad_boost_C14_medium.pkl"
+            model_path = os.path.join(base_dir, "models", "grad_boost_C14_medium.pkl")
             wan_config = "C14"
         else:
-            model_path = "models/grad_boost_C9_hard.pkl"
+            model_path = os.path.join(base_dir, "models", "grad_boost_C9_hard.pkl")
             wan_config = "C9"
 
         print("\n>> Extracting features in-memory...")
@@ -89,7 +48,7 @@ def test(args):
 
         model = joblib.load(model_path)
 
-        output_dir = os.path.join(args.output, problem_type)
+        output_dir = os.path.join(base_output_dir, problem_type)
         os.makedirs(output_dir, exist_ok=True)
 
         inference.run_inference(
@@ -100,4 +59,3 @@ def test(args):
         )
 
     print("\n==== ALL TESTS COMPLETED SUCCESSFULLY ====\n")
-

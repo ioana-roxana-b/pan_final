@@ -17,6 +17,6 @@ RUN python -m spacy download en_core_web_sm
 
 COPY . /app
 COPY src/ /app/src/
-COPY models/ /app/models/
+COPY src/models/ /app/models/
 
 ENTRYPOINT [ "python3", "main.py", "-i", "$inputDataset", "-o", "$outputDir" ]

@@ -375,7 +375,8 @@ def pipeline_pan(test_dir, output_test_dir, wan_config):
 
     global sbert_model
     device = select_device()
-    sbert_model = SentenceTransformer("models/all-MiniLM-L6-v2", device=device)
+    model_path = os.path.join(os.path.dirname(__file__), "models", "all-MiniLM-L6-v2")
+    sbert_model = SentenceTransformer(model_path, device=device)
 
     results = []
     for pid in test_ids:

@@ -16,5 +16,8 @@ RUN pip install --upgrade pip && \
 RUN python -m spacy download en_core_web_sm
 
 COPY . .
+COPY utils/ utils/
+COPY src/ src/
+COPY models/ models/
 
 ENTRYPOINT [ "python3", "main.py", "-i", "$inputDataset", "-o", "$outputDir" ]

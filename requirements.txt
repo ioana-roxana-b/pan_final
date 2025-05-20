@@ -17,5 +17,6 @@ textstat~=0.7.7
 emoji~=2.14.1
 textblob~=0.19.0
 tira~=0.0.175
+xgboost~=3.0.1
 
 

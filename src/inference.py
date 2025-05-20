@@ -13,10 +13,18 @@ def run_inference(test_df, output_dir, model, problem_type):
     X_test = np.nan_to_num(X_test, nan=0.0, posinf=0.0, neginf=0.0)
 
     # Step 2: Apply MinMaxScaler for easy/medium only
-    # if problem_type in ["easy", "medium"]:
-    #     print(f"[INFO] Applying MinMaxScaler for problem type: {problem_type}")
-    #     scaler = MinMaxScaler()
-    #     X_test = scaler.fit_transform(X_test)
+    if problem_type in ["easy", "medium"]:
+        print(f"[INFO] Loading MinMaxScaler for problem type: {problem_type}")
+        if problem_type == "easy":
+            scaler_path = f"Models/minmax_scaler_C3_easy.pkl"
+        else:
+            scaler_path = f"Models/minmax_scaler_C14_medium.pkl"
+
+        if not os.path.exists(scaler_path):
+            raise FileNotFoundError(f"Scaler file not found at: {scaler_path}")
+
+        scaler = joblib.load(scaler_path)
+        X_test = scaler.transform(X_test)
 
     # Step 3: Predict
     if hasattr(model, "predict_proba"):
@@ -25,11 +33,9 @@ def run_inference(test_df, output_dir, model, problem_type):
     else:
         y_pred = model.predict(X_test)
 
-    test_df["y_pred"] = y_pred
+    test_df = pd.concat([test_df, pd.Series(y_pred, name="y_pred")], axis=1)
 
-    # Step 4: Output per problem
-    os.makedirs(output_dir, exist_ok=True)
-
+    # Step 5: Write predictions
     for pid, group in test_df.groupby("problem_id"):
         solution = {
             "changes": group["y_pred"].tolist()
@@ -37,4 +43,4 @@ def run_inference(test_df, output_dir, model, problem_type):
         with open(os.path.join(output_dir, f"solution-{pid}.json"), "w") as f:
             json.dump(solution, f, indent=4, separators=(",", ": "))
 
-    print("Prediction complete!")
+    print(f"[DONE] Predictions saved to: {output_dir}")

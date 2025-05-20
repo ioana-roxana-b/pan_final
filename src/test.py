@@ -20,7 +20,7 @@ def load_features(directory, wan_config):
     Returns:
         pd.DataFrame: A concatenated DataFrame of all features in the directory.
     """
-    path = f'{directory}/{wan_config}'
+    path = f'{directory}'
 
     if not os.path.exists(path):
         raise FileNotFoundError(f"Feature directory '{path}' not found.")
@@ -53,39 +53,54 @@ def detect_problem_type(input_dir):
 
 def test(args):
     print("\n==== STARTING TEST PIPELINE ====\n")
-    problem_type = detect_problem_type(args.input)
-    print(f"[INFO] Detected problem type: {problem_type}")
+    base_input_dir = args.input
+    problem_types = ["easy", "medium", "hard"]
 
-    if problem_type == "easy":
-        model_path = "models/grad_boost_C14_medium.pkl"
-        wan_config = "C3"
-    elif problem_type == "medium":
-        model_path = "models/grad_boost_C14_medium.pkl"
-        wan_config = "C14"
-    else:
-        model_path = "models/grad_boost_C9_hard.pkl"
-        wan_config = "C9"
+    for problem_type in problem_types:
+        problem_input_path = os.path.join(base_input_dir, problem_type)
 
+        if not os.path.exists(problem_input_path):
+            print(f"[SKIP] Input subfolder not found: {problem_input_path}")
+            continue
 
-    features_path = f"PAN25/{problem_type}"
-    os.makedirs(features_path, exist_ok=True)
-    pipeline_pan25.pipeline_pan(test_dir=args.input,
-                                output_test_dir=features_path,
-                                wan_config=wan_config)
+        print(f"\n--- Processing problem type: {problem_type} ---")
 
-    print("\n>> Loading extracted features...")
-    test_features = load_features(directory=features_path, wan_config=wan_config)
+        if problem_type == "easy":
+            model_path = "models/grad_boost_C3_easy.pkl"
+            wan_config = "C3"
+        elif problem_type == "medium":
+            model_path = "models/grad_boost_C14_medium.pkl"
+            wan_config = "C14"
+        else:
+            model_path = "models/grad_boost_C9_hard.pkl"
+            wan_config = "C9"
 
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model file not found: {model_path}")
+        features_path = f"PAN25/{problem_type}"
+        os.makedirs(features_path, exist_ok=True)
 
-    model = joblib.load(model_path)
+        pipeline_pan25.pipeline_pan(
+            test_dir=problem_input_path,
+            output_test_dir=features_path,
+            wan_config=wan_config
+        )
 
-    inference.run_inference(
-        test_df=test_features,
-        output_dir=args.output,
-        model=model,
-        problem_type=problem_type
-    )
+        print("\n>> Loading extracted features...")
+        test_features = load_features(directory=features_path, wan_config=wan_config)
 
-    print("\n==== TEST PIPELINE COMPLETED SUCCESSFULLY ====\n")
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Model file not found: {model_path}")
+
+        model = joblib.load(model_path)
+
+        output_dir = os.path.join(args.output, problem_type)
+        os.makedirs(output_dir, exist_ok=True)
+
+        inference.run_inference(
+            test_df=test_features,
+            output_dir=output_dir,
+            model=model,
+            problem_type=problem_type
+        )
+
+    print("\n==== ALL TESTS COMPLETED SUCCESSFULLY ====\n")
+

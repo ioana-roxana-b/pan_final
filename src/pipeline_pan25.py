@@ -22,11 +22,6 @@ def select_device():
             return "cuda"
     return "cpu"
 
-def init_worker():
-    global sbert_model
-    device = select_device()
-    sbert_model = SentenceTransformer("all-MiniLM-L6-v2", device=device)
-
 def compute_sbert_features_batch(sentences, include_embeddings=True, reduce_dim=None):
     global sbert_model
     embeddings = sbert_model.encode(sentences, convert_to_numpy=True, batch_size=64, show_progress_bar=False)

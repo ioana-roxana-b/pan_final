@@ -68,36 +68,20 @@ def preprocessing(text=None, stopwords=False, lemmatizer=False, punctuations=Fal
 def construct_wans(sentences, output_dir=None, include_pos=False):
     """
     Constructs Word Adjacency Networks (WANs) from a list of sentences.
-
-    The WANs are directed graphs where nodes are words and edges represent adjacency between words.
-    Optionally, POS tags can be added to each word node. Additionally, edges between
-    consecutive POS tags (POS → POS) can be added to capture syntactic structure.
-
-    Params:
-        sentences (list[str]): List of tokenized or raw sentences (str).
-        output_dir (str): Directory to save WANs as pickle files.
-        include_pos (bool): Whether to annotate each word node with its POS tag.
-
-    Returns:
-        dict: A dictionary where each key is a sentence index and each value is a WAN (DiGraph).
-              The graph contains:
-                  - Word nodes with optional 'pos' attributes.
-                  - Edges between words representing adjacency (with 'weight').
-                  - Optional POS tag nodes prefixed with 'POS_' and 'type' set to 'POS'.
-                  - Optional edges between POS tag nodes with 'edge_type' set to 'pos_pos'.
+    Optionally saves WANs as pickle files if output_dir is provided.
     """
-    output_dir = f"wans/{output_dir}/"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+
+    # Only create directory if output_dir is explicitly given
+    if output_dir is not None:
+        output_dir = f"wans/{output_dir}/"
+        os.makedirs(output_dir, exist_ok=True)
 
     wans = {}
 
     for i, sentence in enumerate(sentences):
         wan = nx.DiGraph()
-
         words = word_tokenize(sentence.lower())
 
-        # Word adjacency edges
         for j in range(len(words) - 1):
             word1, word2 = words[j], words[j + 1]
             if wan.has_edge(word1, word2):
@@ -105,14 +89,12 @@ def construct_wans(sentences, output_dir=None, include_pos=False):
             else:
                 wan.add_edge(word1, word2, weight=1)
 
-        # Add POS tags
         if include_pos:
             pos_tags = pos_tag(words)
             for word, pos in pos_tags:
-                if include_pos and word in wan.nodes:
+                if word in wan.nodes:
                     wan.nodes[word]['pos'] = pos
 
-            # Add POS-POS edges
             for j in range(len(pos_tags) - 1):
                 pos1 = f"POS_{pos_tags[j][1]}"
                 pos2 = f"POS_{pos_tags[j + 1][1]}"
@@ -126,12 +108,15 @@ def construct_wans(sentences, output_dir=None, include_pos=False):
                     wan.add_edge(pos1, pos2, weight=1, edge_type='pos_pos')
 
         wan.remove_edges_from(nx.selfloop_edges(wan))
-
         wans[i] = wan
-        filepath = os.path.join(output_dir, f"wan_{i}.pkl")
-        with open(filepath, "wb") as f:
-            pickle.dump(wan, f)
+
+        # Only save if output_dir is valid
+        if output_dir is not None:
+            filepath = os.path.join(output_dir, f"wan_{i}.pkl")
+            with open(filepath, "wb") as f:
+                pickle.dump(wan, f)
 
     return wans
+
 
 

@@ -75,17 +75,12 @@ def test(args):
             model_path = "models/grad_boost_C9_hard.pkl"
             wan_config = "C9"
 
-        features_path = f"PAN25/{problem_type}"
-        os.makedirs(features_path, exist_ok=True)
-
-        pipeline_pan25.pipeline_pan(
+        print("\n>> Extracting features in-memory...")
+        test_features = pipeline_pan25.pipeline_pan(
             test_dir=problem_input_path,
-            output_test_dir=features_path,
+            output_test_dir=None,  # Can be kept if required by pipeline internals
             wan_config=wan_config
         )
-
-        print("\n>> Loading extracted features...")
-        test_features = load_features(directory=features_path, wan_config=wan_config)
 
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model file not found: {model_path}")

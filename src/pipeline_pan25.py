@@ -321,15 +321,16 @@ def process_problem(problem_id, data_dir, output_dir, config):
             window_size=3
         )
 
-        os.makedirs(output_dir, exist_ok=True)
+        if output_dir is not None:
+            os.makedirs(output_dir, exist_ok=True)
+
         df = pd.DataFrame(paired_features).fillna(0)
         if 'label' in df.columns:
             cols = [c for c in df.columns if c != 'label'] + ['label']
             df = df[cols]
 
-        df.to_csv(os.path.join(output_dir, f"features_{problem_id}.csv"), index=False)
-        print(f"[DONE] Features saved for {problem_id}")
-        return problem_id
+        print(f"[DONE] Features extracted for {problem_id}")
+        return df
 
     except Exception as e:
         print(f"[ERROR] Failed {problem_id}: {e}")
@@ -351,12 +352,16 @@ def parallel_process_problems(problem_ids, data_dir, output_dir, config):
         for future in as_completed(futures):
             pid = futures[future]
             try:
-                result = future.result()
-                if result:
-                    results.append(result)
+                df = future.result()
+                if df is not None:
+                    results.append(df)
             except Exception as e:
                 print(f"[ERROR] Future failed for {pid}: {e}")
-    return results
+    if results:
+        return pd.concat(results, ignore_index=True)
+    else:
+        return pd.DataFrame()
+
 
 def pipeline_pan(test_dir, output_test_dir, wan_config):
     print("==== Starting Pipeline ====")

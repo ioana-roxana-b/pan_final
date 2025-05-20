@@ -15,9 +15,7 @@ build:
 # Run the pipeline with specified or default input/output
 run:
 	docker run --rm \
-		-v $(abspath $(INPUT)):/input \
-		-v $(abspath $(OUTPUT)):/output \
-		$(IMAGE_NAME) -i /input -o /output
+		$(IMAGE_NAME) -i train -o /output
 
 # Clean placeholder (no artifacts currently)
 clean:

@@ -18,4 +18,4 @@ RUN python -m spacy download en_core_web_sm && \
 
 COPY . .
 
-ENTRYPOINT ["python3", "main.py"]
+ENTRYPOINT [ "python3", "main.py", "-i", "$inputDataset", "-o", "$outputDir" ]

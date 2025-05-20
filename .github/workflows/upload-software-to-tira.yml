@@ -30,21 +30,6 @@ jobs:
         run: |
           tira-cli login --token ${{ secrets.TIRA_CLIENT_TOKEN }}
           tira-cli verify-installation
-          tira-cli code-submission --path ${{ inputs.directory }} --task multi-author-writing-style-analysis-2025 --dataset multi-author-writing-style-analysis-2025/multi-author-writing-spot-check-20250503-training
-
-          python -m pip install --upgrade pip
-          pip install tira
-
-      - name: Log in to TIRA
-        run: |
-          tira-cli login --token ${{ secrets.TIRA_CLIENT_TOKEN }}
-
-      - name: Verify TIRA Installation
-        run: |
-          tira-cli verify-installation
-
-      - name: Build, Test, and Upload Docker Image to TIRA
-        run: |
           tira-cli code-submission \
             --path "${{ inputs.directory }}" \
             --task multi-author-writing-style-analysis-2025 \

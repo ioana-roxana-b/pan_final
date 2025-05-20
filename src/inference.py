@@ -12,6 +12,10 @@ def run_inference(test_df, output_dir, model, problem_type):
     X_test = X_test.select_dtypes(include=[np.number])
     X_test = np.nan_to_num(X_test, nan=0.0, posinf=0.0, neginf=0.0)
 
+    if X_test.shape[0] == 0 or X_test.shape[1] == 0:
+        print("[WARNING] No features available for inference. Skipping.")
+        return
+
     # Step 2: Apply MinMaxScaler for easy/medium only
     if problem_type in ["easy", "medium"]:
         print(f"[INFO] Loading MinMaxScaler for problem type: {problem_type}")

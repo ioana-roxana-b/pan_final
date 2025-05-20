@@ -3,20 +3,14 @@ import json
 import numpy as np
 import pandas as pd
 import torch
-import multiprocessing
-import psutil
 
 from collections import Counter
 from scipy.spatial.distance import euclidean
 from sklearn.feature_extraction import DictVectorizer
-from concurrent.futures import ProcessPoolExecutor, as_completed
-
 from sentence_transformers import SentenceTransformer
-
 from src import preprocessing, features
-
-# Safe multiprocessing start
-multiprocessing.set_start_method('spawn', force=True)
+import os
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
 # Global SBERT model for worker processes
 sbert_model = None
@@ -132,8 +126,26 @@ def smooth_features(paired_features, feature_keys, window_size=3):
 
     return paired_features
 
+
 def collect_problem_ids(directory):
-    return [f.replace(".txt", "") for f in os.listdir(directory) if f.startswith("problem-") and f.endswith(".txt")]
+    entries = os.listdir(directory)
+    files = [f for f in entries if f.endswith(".txt")]
+
+    if files:
+        print(f"[INFO] Found {len(files)} .txt files in: {directory}")
+        return [f.replace(".txt", "") for f in files if f.startswith("problem-")], directory
+
+    subdirs = [d for d in entries if os.path.isdir(os.path.join(directory, d))]
+    if len(subdirs) == 1:
+        inner_dir = os.path.join(directory, subdirs[0])
+        inner_files = os.listdir(inner_dir)
+        txts = [f for f in inner_files if f.endswith(".txt") and f.startswith("problem-")]
+        print(f"[INFO] Found {len(txts)} .txt files in subdirectory: {subdirs[0]}")
+        return [f.replace(".txt", "") for f in txts], inner_dir
+
+    print(f"[WARNING] No valid .txt files found in: {directory}")
+    return [], directory
+
 
 def load_wan_config(config_name):
     with open("utils/new_wan_configs.json", 'r') as f:
@@ -336,39 +348,32 @@ def process_problem(problem_id, data_dir, output_dir, config):
         print(f"[ERROR] Failed {problem_id}: {e}")
         return None
 
+def pipeline_pan(test_dir, output_test_dir, wan_config):
+    print("==== Starting Pipeline ====")
+    config = load_wan_config(wan_config)
+    test_ids, actual_data_dir = collect_problem_ids(test_dir)
 
-def parallel_process_problems(problem_ids, data_dir, output_dir, config):
-    available_ram = psutil.virtual_memory().available // (1024**3)
-    estimated_ram_per_worker = 2 
+    print(f"[DEBUG] Looking in: {test_dir}")
+    print("Files in dir:", os.listdir(test_dir))
 
-    safe_workers = max(1, available_ram // estimated_ram_per_worker)
-    max_workers = min(safe_workers, multiprocessing.cpu_count())
+    print(f"[DEBUG] Found problem files: {test_ids}")
 
-    print(f"Launching with {max_workers} workers based on {available_ram} GB free RAM.")
+    global sbert_model
+    device = select_device()
+    sbert_model = SentenceTransformer("models/all-MiniLM-L6-v2", device=device)
 
     results = []
-    with ProcessPoolExecutor(max_workers=max_workers, initializer=init_worker) as executor:
-        futures = {executor.submit(process_problem, pid, data_dir, output_dir, config): pid for pid in problem_ids}
-        for future in as_completed(futures):
-            pid = futures[future]
-            try:
-                df = future.result()
-                if df is not None:
-                    results.append(df)
-            except Exception as e:
-                print(f"[ERROR] Future failed for {pid}: {e}")
+    for pid in test_ids:
+        df = process_problem(pid, actual_data_dir, output_test_dir, config)
+        if df is not None:
+            print(f"[INFO] Feature shape for {pid}: {df.shape}")
+            results.append(df)
+        else:
+            print(f"[WARNING] Skipped {pid} (no features or error).")
+
+    print(f"[SUMMARY] Successfully processed {len(results)} / {len(test_ids)} problems.")
+
     if results:
         return pd.concat(results, ignore_index=True)
     else:
         return pd.DataFrame()
-
-
-def pipeline_pan(test_dir, output_test_dir, wan_config):
-    print("==== Starting Pipeline ====")
-    config = load_wan_config(wan_config)
-    test_ids = collect_problem_ids(test_dir)
-
-    test_results = parallel_process_problems(test_ids, test_dir, output_test_dir, config)
-
-    print("==== Feature Extraction Completed ====")
-    return test_results

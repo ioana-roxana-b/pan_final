@@ -1,10 +1,12 @@
 import os
-import json
-
 import joblib
 import pandas as pd
 
 from src import inference, pipeline_pan25
+import os
+os.environ["NLTK_DATA"] = "/usr/local/nltk_data"
+
+
 
 def load_features(directory, wan_config):
     """
@@ -78,7 +80,7 @@ def test(args):
         print("\n>> Extracting features in-memory...")
         test_features = pipeline_pan25.pipeline_pan(
             test_dir=problem_input_path,
-            output_test_dir=None,  # Can be kept if required by pipeline internals
+            output_test_dir=None,
             wan_config=wan_config
         )
 

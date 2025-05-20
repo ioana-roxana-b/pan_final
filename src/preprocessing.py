@@ -1,5 +1,3 @@
-from nltk import pos_tag
-from nltk.tokenize import word_tokenize
 import os
 import networkx as nx
 import pickle
@@ -80,7 +78,8 @@ def construct_wans(sentences, output_dir=None, include_pos=False):
 
     for i, sentence in enumerate(sentences):
         wan = nx.DiGraph()
-        words = word_tokenize(sentence.lower())
+        doc = nlp(sentence.lower())
+        words = [token.text for token in doc if not token.is_space]
 
         for j in range(len(words) - 1):
             word1, word2 = words[j], words[j + 1]
@@ -90,7 +89,8 @@ def construct_wans(sentences, output_dir=None, include_pos=False):
                 wan.add_edge(word1, word2, weight=1)
 
         if include_pos:
-            pos_tags = pos_tag(words)
+            pos_tags = [(token.text, token.tag_) for token in doc if not token.is_space]
+
             for word, pos in pos_tags:
                 if word in wan.nodes:
                     wan.nodes[word]['pos'] = pos

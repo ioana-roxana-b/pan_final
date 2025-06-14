@@ -40,7 +40,7 @@ def run_inference(test_df, output_dir, model, problem_type):
 
     test_df = pd.concat([test_df, pd.Series(y_pred, name="y_pred")], axis=1)
 
-    # Step 5: Write predictions
+    # Step 4: Write predictions
     for pid, group in test_df.groupby("problem_id"):
         solution = {
             "changes": group["y_pred"].tolist()

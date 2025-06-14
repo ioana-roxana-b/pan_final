@@ -598,7 +598,6 @@ def extract_pos_tfidf_features(sentences):
 
     return pos_tfidf_cosine
 
-# --- New: Punctuation burstiness and sentence length variance ---
 def compute_punctuation_burstiness(sentences, window_size=3):
     burstiness = []
     half_window = window_size // 2
@@ -677,7 +676,7 @@ def extract_lexical_features(sentence):
     features["conjunction_ratio"] = pos_counts.get("CCONJ", 0) / token_len if token_len else 0
     features["preposition_ratio"] = pos_counts.get("ADP", 0) / token_len if token_len else 0
 
-    # NEW: Add POS trigram counter (raw, for later similarity use)
+    # POS trigram counter (raw, for later similarity use)
     features["pos_bigram_counter"] = extract_pos_ngrams(sentence, n=2)
     features["pos_skipgram_counter"] = extract_pos_ngrams(sentence, n=2, skip=1)
 
@@ -706,16 +705,16 @@ def extract_lexical_features(sentence):
     features["second_person_ratio"] = second_person_count / token_len if token_len else 0
     features["third_person_ratio"] = third_person_count / token_len if token_len else 0
 
-    # --- New Stopword Ratio ---
+    # --- Stopword Ratio ---
     stopwords = set(STOP_WORDS)
     num_stopwords = sum(1 for token in tokens if token.text.lower() in stopwords)
     features["stopword_ratio"] = num_stopwords / token_len if token_len else 0
 
-    # --- New Uppercase Character Ratio ---
+    # --- Uppercase Character Ratio ---
     num_upper = sum(1 for c in sentence if c.isupper())
     features["char_upper_ratio"] = num_upper / char_len if char_len else 0
 
-    # --- New Stylometric Readability/Rhythm Features ---
+    # --- Stylometric Readability/Rhythm Features ---
     try:
         features["flesch_reading_ease"] = textstat.flesch_reading_ease(sentence)
         features["gunning_fog"] = textstat.gunning_fog(sentence)

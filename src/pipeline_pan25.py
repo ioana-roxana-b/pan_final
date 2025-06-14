@@ -235,7 +235,6 @@ def process_problem(problem_id, data_dir, output_dir, config):
             cos_angle = float(np.dot(delta1, delta2) / denom) if denom != 0 else 0.0
             directional_cosines.append(cos_angle)
 
-        # NEW: Compute burstiness and variance
         punctuation_burstiness = features.compute_punctuation_burstiness(sentences, window_size=3)
         length_variance = features.compute_length_variance(sentences, window_size=3)
 
@@ -367,11 +366,6 @@ def pipeline_pan(test_dir, output_test_dir, wan_config):
     print("==== Starting Pipeline ====")
     config = load_wan_config(wan_config)
     test_ids, actual_data_dir = collect_problem_ids(test_dir)
-
-    # print(f"[DEBUG] Looking in: {test_dir}")
-    # print("Files in dir:", os.listdir(test_dir))
-    #
-    # print(f"[DEBUG] Found problem files: {test_ids}")
 
     global sbert_model
     device = select_device()

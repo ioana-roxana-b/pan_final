@@ -69,7 +69,6 @@ def construct_wans(sentences, output_dir=None, include_pos=False):
     Optionally saves WANs as pickle files if output_dir is provided.
     """
 
-    # Only create directory if output_dir is explicitly given
     if output_dir is not None:
         output_dir = f"wans/{output_dir}/"
         os.makedirs(output_dir, exist_ok=True)
@@ -110,7 +109,6 @@ def construct_wans(sentences, output_dir=None, include_pos=False):
         wan.remove_edges_from(nx.selfloop_edges(wan))
         wans[i] = wan
 
-        # Only save if output_dir is valid
         if output_dir is not None:
             filepath = os.path.join(output_dir, f"wan_{i}.pkl")
             with open(filepath, "wb") as f:

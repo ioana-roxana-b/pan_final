@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # Remove WORKDIR
-WORKDIR /app
+# WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     curl && rm -rf /var/lib/apt/lists/*
@@ -15,8 +15,6 @@ RUN pip install --upgrade pip && \
 
 RUN python -m spacy download en_core_web_sm
 
-COPY . /app
-COPY src/ /app/src/
-COPY src/models/ /app/models/
+COPY . .
 
 ENTRYPOINT [ "python3", "main.py", "-i", "$inputDataset", "-o", "$outputDir" ]

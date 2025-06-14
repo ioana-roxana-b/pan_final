@@ -3,6 +3,19 @@ import joblib
 from src import inference, pipeline_pan25
 
 def detect_problem_type(input_dir):
+    """
+    Detects the problem type (easy, medium, hard) from the given input directory path.
+
+    Args:
+        input_dir (str): Path to the directory containing problem data.
+
+    Returns:
+        str: One of "easy", "medium", or "hard".
+
+    Raises:
+        ValueError: If none of the expected problem types are found in the path.
+    """
+
     parts = os.path.normpath(input_dir).split(os.sep)
     for part in ["easy", "medium", "hard"]:
         if part in parts:
@@ -10,6 +23,17 @@ def detect_problem_type(input_dir):
     raise ValueError("Could not determine problem type (easy/medium/hard) from path: " + input_dir)
 
 def test(args):
+    """
+    Executes the full test pipeline for all problem types (easy, medium, hard), including
+    feature extraction and prediction.
+
+    Args:
+        args (argparse.Namespace): Arguments containing 'input' and 'output' directory paths.
+
+    Returns:
+        None. Saves predictions for each problem type to the specified output directory.
+    """
+
     print("\n==== STARTING TEST PIPELINE ====\n")
     base_input_dir = args.input
     base_output_dir = args.output

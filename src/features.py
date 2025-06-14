@@ -54,6 +54,16 @@ LIWC_CERTAINTY = {"always", "never", "definitely", "certainly", "must", "undenia
 LIWC_TENTATIVENESS = {"maybe", "perhaps", "possibly", "seems", "guess", "kind of", "sort of", "i think"}
 
 def get_pattern_type(text):
+    """
+    Classifies a sentence into one of several pattern types based on common moderator or bot language.
+
+    Args:
+        text (str): Input text string.
+
+    Returns:
+        int: Pattern type identifier (0 if no pattern matched).
+    """
+
     s = text.strip().lower()
 
     # Rule 1: Clearly mod-automated content
@@ -86,6 +96,19 @@ def get_pattern_type(text):
 
 
 def extract_deep_style_features(sentence, index=None, all_sentences=None):
+    """
+    Extracts a rich set of deep style features from a sentence, including formality, discourse markers,
+    LIWC-style categories, emoji usage, sentiment, and pattern-based flags.
+
+    Args:
+        sentence (str): Input sentence.
+        index (int, optional): Index of the sentence in a list.
+        all_sentences (list, optional): List of surrounding sentences.
+
+    Returns:
+        dict: Dictionary of extracted style features.
+    """
+
     doc = nlp(sentence)
     tokens = [token for token in doc if not token.is_space]
     token_len = len(tokens)
@@ -187,7 +210,18 @@ def extract_deep_style_features(sentence, index=None, all_sentences=None):
     }
 
 def compute_wan_window_drift(sentences, window_size=3, step=1, include_pos=True):
+    """
+    Computes drift in WAN-based lexical-syntactic features across sliding windows of sentences.
 
+    Args:
+        sentences (list): List of sentences.
+        window_size (int): Number of sentences in each window.
+        step (int): Step size for moving the window.
+        include_pos (bool): Whether to include POS-specific WAN features.
+
+    Returns:
+        list: List of dictionaries with cosine similarity and Euclidean distance for adjacent windows.
+    """
 
     if len(sentences) < window_size + 1:
         return []
@@ -229,6 +263,17 @@ def compute_wan_window_drift(sentences, window_size=3, step=1, include_pos=True)
     return drifts
 
 def extract_contextual_features(sentences):
+    """
+    Extracts contextual features for each sentence, including similarity to neighbors, NER and lemma overlaps,
+    discourse cues, and subject continuity.
+
+    Args:
+        sentences (list): List of sentences.
+
+    Returns:
+        list: List of dictionaries containing contextual features per sentence.
+    """
+
     features = []
     docs = list(nlp.pipe(sentences))
 
@@ -287,16 +332,48 @@ def extract_contextual_features(sentences):
     return features
 
 def jaccard_similarity(set1, set2):
+    """
+    Computes Jaccard similarity between two sets.
+
+    Args:
+        set1 (set): First set.
+        set2 (set): Second set.
+
+    Returns:
+        float: Jaccard similarity score.
+    """
+
     intersection = len(set1 & set2)
     union = len(set1 | set2)
     return intersection / union if union > 0 else 0
 
 def cosine_similarity_safe(v1, v2):
+    """
+    Computes cosine similarity between two vectors with zero-vector check.
+
+    Args:
+        v1 (np.array): First vector.
+        v2 (np.array): Second vector.
+
+    Returns:
+        float: Cosine similarity score.
+    """
+
     if np.linalg.norm(v1) == 0 or np.linalg.norm(v2) == 0:
         return 0.0
     return 1 - cosine(v1, v2)
 
-def extract_wan_pairwise_features(wan1, wan2, compute_edit_distance=False, compute_spectral=False):
+def extract_wan_pairwise_features(wan1, wan2):
+    """
+    Computes similarity features between two WANs based on structure and centrality metrics.
+
+    Args:
+        wan1 (nx.DiGraph): First WAN graph.
+        wan2 (nx.DiGraph): Second WAN graph.
+
+    Returns:
+        dict: Dictionary of similarity features.
+    """
     features = {}
 
     # --- Jaccard similarities ---
@@ -335,6 +412,15 @@ def extract_wan_pairwise_features(wan1, wan2, compute_edit_distance=False, compu
 
 
 def degree_entropy(wan):
+    """
+    Computes entropy of the degree distribution of a WAN.
+
+    Args:
+        wan (nx.Graph): Word adjacency network.
+
+    Returns:
+        float: Degree entropy value.
+    """
     degrees = [d for _, d in wan.degree()]
     if not degrees:
         return 0.0
@@ -343,6 +429,15 @@ def degree_entropy(wan):
     return entropy(probs)
 
 def pos_transition_entropy(wan):
+    """
+    Computes entropy of POS tag transitions in a WAN.
+
+    Args:
+        wan (nx.Graph): Word adjacency network.
+
+    Returns:
+        float: Transition entropy score.
+    """
     pos_edges = [(u, v) for u, v in wan.edges() if "POS_" in u and "POS_" in v]
     transitions = Counter(pos_edges)
     total = sum(transitions.values())
@@ -350,12 +445,31 @@ def pos_transition_entropy(wan):
     return entropy(probs) if probs.size > 0 else 0.0
 
 def count_triangles(wan):
+    """
+    Counts the number of triangles in the WAN.
+
+    Args:
+        wan (nx.Graph): Word adjacency network.
+
+    Returns:
+        int: Triangle count.
+    """
     try:
         return sum(nx.triangles(wan.to_undirected()).values()) // 3
     except:
         return 0
 
 def star_ratio(wan, min_degree=3):
+    """
+    Computes the ratio of nodes with degree greater than or equal to a threshold in a WAN.
+
+    Args:
+        wan (nx.Graph): Word adjacency network.
+        min_degree (int): Degree threshold.
+
+    Returns:
+        float: Star structure ratio.
+    """
     if wan.number_of_nodes() == 0:
         return 0.0
     high_deg = sum(1 for _, d in wan.degree() if d >= min_degree)
@@ -495,6 +609,17 @@ def extract_lexical_syntactic_features(features, include_pos):
 
 
 def extract_pos_ngrams(sentence, n=2, skip=0):
+    """
+    Extracts POS n-grams with optional skips from a sentence.
+
+    Args:
+        sentence (str): Input sentence.
+        n (int): Length of n-grams.
+        skip (int): Number of tokens to skip.
+
+    Returns:
+        Counter: POS n-gram counts.
+    """
     doc = nlp(sentence)
     pos_tags = [token.pos_ for token in doc if not token.is_space]
     ngrams = []
@@ -506,6 +631,15 @@ def extract_pos_ngrams(sentence, n=2, skip=0):
 
 
 def yules_k(doc):
+    """
+    Computes Yule's K measure for lexical diversity.
+
+    Args:
+        doc (spacy.tokens.Doc): spaCy processed document.
+
+    Returns:
+        float: Yule's K value.
+    """
     tokens = [t.text.lower() for t in doc if t.is_alpha]
     if not tokens:
         return 0
@@ -517,6 +651,15 @@ def yules_k(doc):
     return 10_000 * (M1 - N) / (N**2) if N else 0
 
 def dependency_avg_depth(sentence):
+    """
+    Computes the average depth of dependency parse trees in a sentence.
+
+    Args:
+        sentence (str): Input sentence.
+
+    Returns:
+        float: Average dependency depth.
+    """
     doc = nlp(sentence)
     depths = []
 
@@ -531,6 +674,16 @@ def dependency_avg_depth(sentence):
     return sum(depths) / len(depths) if depths else 0.0
 
 def passive_ratio(sentence):
+    """
+    Computes the ratio of passive voice verbs in a sentence.
+
+    Args:
+        sentence (str): Input sentence.
+
+    Returns:
+        float: Passive voice ratio.
+    """
+
     doc = nlp(sentence)
     passive_count = 0
     verb_count = 0
@@ -599,6 +752,17 @@ def extract_pos_tfidf_features(sentences):
     return pos_tfidf_cosine
 
 def compute_punctuation_burstiness(sentences, window_size=3):
+    """
+    Computes punctuation burstiness in local windows of sentences.
+
+    Args:
+        sentences (list): List of sentences.
+        window_size (int): Window size for local analysis.
+
+    Returns:
+        list: Burstiness score for each sentence.
+    """
+
     burstiness = []
     half_window = window_size // 2
     num_sentences = len(sentences)
@@ -618,6 +782,17 @@ def compute_punctuation_burstiness(sentences, window_size=3):
     return burstiness
 
 def compute_length_variance(sentences, window_size=3):
+    """
+    Computes variance in sentence lengths over a sliding window.
+
+    Args:
+        sentences (list): List of sentences.
+        window_size (int): Number of sentences to include in each window.
+
+    Returns:
+        list: Variance values per sentence window.
+    """
+
     variances = []
     half_window = window_size // 2
     num_sentences = len(sentences)
@@ -634,6 +809,18 @@ def compute_length_variance(sentences, window_size=3):
 
 
 def extract_lexical_features(sentence):
+    """
+    Extracts lexical, syntactic, and stylometric features from a sentence.
+
+    Args:
+        sentence (str): Input sentence to analyze.
+
+    Returns:
+        dict: A dictionary containing features such as type-token ratio, average word length,
+              character and token statistics, POS ratios, punctuation patterns, function word usage,
+              pronoun perspective ratios, syntactic depth, passive voice ratio, POS n-gram counts,
+              stopword and uppercase character ratios, and multiple readability metrics.
+    """
     sentence = sentence.strip()
     doc = nlp(sentence)
 

@@ -6,6 +6,19 @@ import joblib
 from sklearn.preprocessing import MinMaxScaler
 
 def run_inference(test_df, output_dir, model, problem_type):
+    """
+    Runs inference on a test DataFrame using a trained model and writes predictions to output files.
+
+    Args:
+        test_df (pd.DataFrame): Test dataset containing features and optional metadata columns.
+        output_dir (str): Directory path to save output JSON prediction files.
+        model (sklearn.base.BaseEstimator): Trained machine learning model supporting predict or predict_proba.
+        problem_type (str): String indicating the difficulty type of the problem ("easy", "medium", or "hard").
+
+    Returns:
+        None. Saves prediction results as JSON files to the specified output directory.
+    """
+
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Step 1: Clean up features

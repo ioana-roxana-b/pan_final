@@ -16,6 +16,13 @@ os.environ["TRANSFORMERS_OFFLINE"] = "1"
 sbert_model = None
 
 def select_device():
+    """
+    Selects the appropriate device (CUDA or CPU) based on available GPU memory.
+
+    Returns:
+        str: "cuda" if a compatible GPU is available with sufficient memory, otherwise "cpu".
+    """
+
     if torch.cuda.is_available():
         mem = torch.cuda.get_device_properties(0).total_memory // (1024**2)
         if mem > 6000:
@@ -23,6 +30,18 @@ def select_device():
     return "cpu"
 
 def compute_sbert_features_batch(sentences, include_embeddings=True, reduce_dim=None):
+    """
+    Computes SBERT-based similarity and distance metrics between adjacent sentence embeddings.
+
+    Args:
+        sentences (List[str]): List of sentences to encode.
+        include_embeddings (bool): Whether to include raw embeddings and their deltas in the output.
+        reduce_dim (int, optional): Number of PCA dimensions to reduce embeddings to.
+
+    Returns:
+        List[Dict]: List of dictionaries containing SBERT pairwise similarity and distance features.
+    """
+
     global sbert_model
     embeddings = sbert_model.encode(sentences, convert_to_numpy=True, batch_size=64, show_progress_bar=False)
     
@@ -71,6 +90,17 @@ def compute_sbert_features_batch(sentences, include_embeddings=True, reduce_dim=
     return features
 
 def compute_multi_skip_semantic_drift(embeddings, skips=[1, 2, 3]):
+    """
+    Computes semantic drift features across multiple skip distances using sentence embeddings.
+
+    Args:
+        embeddings (np.ndarray): Array of sentence embeddings.
+        skips (List[int]): List of skip distances to compute drift over.
+
+    Returns:
+        List[Dict]: List of drift feature dictionaries for each sentence index.
+    """
+
     drift_features = []
     num_sentences = len(embeddings)
     for i in range(num_sentences - 1):
@@ -90,15 +120,15 @@ def compute_multi_skip_semantic_drift(embeddings, skips=[1, 2, 3]):
 
 def smooth_features(paired_features, feature_keys, window_size=3):
     """
-    Smooths selected feature columns using a moving average.
+    Smooths selected feature values using a moving average with a fixed window size.
 
     Args:
-        paired_features (List[Dict]): List of feature dicts for sentence pairs.
+        paired_features (List[Dict]): List of feature dictionaries.
         feature_keys (List[str]): List of feature names to smooth.
-        window_size (int): Size of moving window (must be odd).
+        window_size (int): Odd-numbered size of the smoothing window.
 
     Returns:
-        List[Dict]: Updated paired_features with smoothed feature values.
+        List[Dict]: Updated feature dictionaries with additional smoothed values.
     """
     assert window_size % 2 == 1, "Window size must be odd!"
 
@@ -123,6 +153,16 @@ def smooth_features(paired_features, feature_keys, window_size=3):
 
 
 def collect_problem_ids(directory):
+    """
+    Collects all problem IDs from .txt files in a given directory or its single subdirectory.
+
+    Args:
+        directory (str): Path to the directory containing problem files.
+
+    Returns:
+        Tuple[List[str], str]: List of problem IDs and the actual data directory path.
+    """
+
     entries = os.listdir(directory)
     files = [f for f in entries if f.endswith(".txt")]
 
@@ -143,6 +183,19 @@ def collect_problem_ids(directory):
 
 
 def load_wan_config(config_name):
+    """
+    Loads WAN preprocessing configuration based on a named preset.
+
+    Args:
+        config_name (str): Configuration name (e.g., "C1", "C14").
+
+    Returns:
+        dict: Dictionary containing boolean flags for punctuation, stopword, lemmatizer, and POS inclusion.
+
+    Raises:
+        ValueError: If the configuration name is invalid.
+    """
+
     all_configs = {
         "C1": {"punctuations": "True", "stopwords": "True", "lemmatizer": "True", "include_pos": "True"},
         "C2": {"punctuations": "True", "stopwords": "True", "lemmatizer": "False", "include_pos": "True"},
@@ -174,6 +227,19 @@ def load_wan_config(config_name):
     return config
 
 def process_problem(problem_id, data_dir, output_dir, config):
+    """
+    Processes a single PAN-style problem by computing all pairwise and sentence-level features.
+
+    Args:
+        problem_id (str): Identifier of the problem.
+        data_dir (str): Directory containing the input problem files.
+        output_dir (str): Directory to save WAN outputs and intermediate results.
+        config (dict): WAN configuration dictionary.
+
+    Returns:
+        pd.DataFrame or None: DataFrame of extracted features or None if processing failed.
+    """
+
     global sbert_model
     try:
         print(f"\n>> [START] Processing {problem_id}...")  
@@ -363,6 +429,18 @@ def process_problem(problem_id, data_dir, output_dir, config):
         return None
 
 def pipeline_pan(test_dir, output_test_dir, wan_config):
+    """
+    Runs the full PAN authorship change detection pipeline on all problems in a test directory.
+
+    Args:
+        test_dir (str): Directory containing input problems (text and truth files).
+        output_test_dir (str): Directory to save processed outputs and WAN graphs.
+        wan_config (str): Configuration name for WAN preprocessing (e.g., "C3").
+
+    Returns:
+        pd.DataFrame: Combined DataFrame of all extracted features for each problem.
+    """
+
     print("==== Starting Pipeline ====")
     config = load_wan_config(wan_config)
     test_ids, actual_data_dir = collect_problem_ids(test_dir)
